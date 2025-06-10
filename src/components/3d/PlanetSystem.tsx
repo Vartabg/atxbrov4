@@ -4,6 +4,7 @@ import { useRef, useState, useMemo, Suspense } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
 import { Points, PointMaterial } from '@react-three/drei';
 import { TextureLoader } from 'three/src/loaders/TextureLoader';
+import { SpaceStation } from './SpaceStation';
 import * as THREE from 'three';
 
 interface PlanetProps {
@@ -59,102 +60,6 @@ const ParticleRing = ({ position, color, hovered }: {
           opacity={hovered ? 0.8 : 0.3}
         />
       </Points>
-    </group>
-  );
-};
-
-const LoadingPlanet = ({ position, color, emissive, name, onClick, size = 1.2 }: PlanetProps) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const outerRef = useRef<THREE.Mesh>(null);
-  const [hovered, setHovered] = useState(false);
-  
-  useFrame((state, delta) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.5;
-      
-      // Pulsing effect
-      const scale = 0.8 + Math.sin(state.clock.elapsedTime * 2) * 0.2;
-      meshRef.current.scale.setScalar(scale);
-    }
-    
-    if (outerRef.current) {
-      outerRef.current.rotation.y -= delta * 0.3;
-      outerRef.current.rotation.x += delta * 0.2;
-    }
-  });
-  
-  return (
-    <group position={position} onClick={onClick}>
-      {/* Inner core with wireframe */}
-      <mesh
-        ref={meshRef}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          document.body.style.cursor = 'pointer';
-          setHovered(true);
-        }}
-        onPointerOut={() => {
-          document.body.style.cursor = 'auto';
-          setHovered(false);
-        }}
-      >
-        <icosahedronGeometry args={[size * 0.6, 1]} />
-        <meshBasicMaterial 
-          color={color}
-          wireframe
-          transparent
-          opacity={0.6}
-        />
-      </mesh>
-      
-      {/* Outer scanning shell */}
-      <mesh ref={outerRef}>
-        <sphereGeometry args={[size, 16, 16]} />
-        <meshBasicMaterial 
-          color={emissive}
-          transparent
-          opacity={0.2}
-          wireframe
-        />
-      </mesh>
-      
-      {/* Scanning particles */}
-      <Points
-        positions={useMemo(() => {
-          const positions = new Float32Array(30 * 3);
-          for (let i = 0; i < 30; i++) {
-            const radius = size * 1.5;
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.acos(2 * Math.random() - 1);
-            positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-            positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-            positions[i * 3 + 2] = radius * Math.cos(phi);
-          }
-          return positions;
-        }, [size])}
-        stride={3}
-        frustumCulled={false}
-      >
-        <PointMaterial
-          transparent
-          color={emissive}
-          size={0.1}
-          sizeAttenuation={true}
-          depthWrite={false}
-          opacity={0.8}
-          blending={THREE.AdditiveBlending}
-        />
-      </Points>
-      
-      {/* Central glow */}
-      <mesh>
-        <sphereGeometry args={[size * 0.3, 16, 16]} />
-        <meshBasicMaterial 
-          color={emissive}
-          transparent
-          opacity={0.8}
-        />
-      </mesh>
     </group>
   );
 };
@@ -260,66 +165,97 @@ const StationaryPlanet = ({
   );
 };
 
-const SpaceStation = ({ onClick }: { onClick: () => void }) => {
-  const stationRef = useRef<THREE.Group>(null);
+const LoadingPlanet = ({ position, color, emissive, name, onClick, size = 1.2 }: PlanetProps) => {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const outerRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   
   useFrame((state, delta) => {
-    if (stationRef.current) {
-      stationRef.current.rotation.y += delta * 0.2;
+    if (meshRef.current) {
+      meshRef.current.rotation.y += delta * 0.5;
+      
+      // Pulsing effect
+      const scale = 0.8 + Math.sin(state.clock.elapsedTime * 2) * 0.2;
+      meshRef.current.scale.setScalar(scale);
+    }
+    
+    if (outerRef.current) {
+      outerRef.current.rotation.y -= delta * 0.3;
+      outerRef.current.rotation.x += delta * 0.2;
     }
   });
   
   return (
-    <group 
-      ref={stationRef}
-      onClick={onClick}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        document.body.style.cursor = 'pointer';
-        setHovered(true);
-      }}
-      onPointerOut={() => {
-        document.body.style.cursor = 'auto';
-        setHovered(false);
-      }}
-    >
-      {/* Central hub */}
+    <group position={position} onClick={onClick}>
+      {/* Inner core with wireframe */}
+      <mesh
+        ref={meshRef}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = 'pointer';
+          setHovered(true);
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'auto';
+          setHovered(false);
+        }}
+      >
+        <icosahedronGeometry args={[size * 0.6, 1]} />
+        <meshBasicMaterial 
+          color={color}
+          wireframe
+          transparent
+          opacity={0.6}
+        />
+      </mesh>
+      
+      {/* Outer scanning shell */}
+      <mesh ref={outerRef}>
+        <sphereGeometry args={[size, 16, 16]} />
+        <meshBasicMaterial 
+          color={emissive}
+          transparent
+          opacity={0.2}
+          wireframe
+        />
+      </mesh>
+      
+      {/* Scanning particles */}
+      <Points
+        positions={useMemo(() => {
+          const positions = new Float32Array(30 * 3);
+          for (let i = 0; i < 30; i++) {
+            const radius = size * 1.5;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+            positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+            positions[i * 3 + 2] = radius * Math.cos(phi);
+          }
+          return positions;
+        }, [size])}
+        stride={3}
+        frustumCulled={false}
+      >
+        <PointMaterial
+          transparent
+          color={emissive}
+          size={0.1}
+          sizeAttenuation={true}
+          depthWrite={false}
+          opacity={0.8}
+          blending={THREE.AdditiveBlending}
+        />
+      </Points>
+      
+      {/* Central glow */}
       <mesh>
-        <cylinderGeometry args={[1.5, 1.5, 0.8, 16]} />
-        <meshStandardMaterial 
-          color="#cccccc" 
-          metalness={0.8} 
-          roughness={0.2}
-          emissive={hovered ? "#0066ff" : "#000000"}
-          emissiveIntensity={hovered ? 0.2 : 0}
+        <sphereGeometry args={[size * 0.3, 16, 16]} />
+        <meshBasicMaterial 
+          color={emissive}
+          transparent
+          opacity={0.8}
         />
-      </mesh>
-      
-      {/* Rotating ring */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[2.5, 0.3, 8, 16]} />
-        <meshStandardMaterial 
-          color="#888888" 
-          metalness={0.7} 
-          roughness={0.3}
-          emissive={hovered ? "#0066ff" : "#000000"}
-          emissiveIntensity={hovered ? 0.1 : 0}
-        />
-      </mesh>
-      
-      {/* Docking ports */}
-      {[0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2].map((angle, i) => (
-        <mesh key={i} position={[Math.cos(angle) * 2.5, 0, Math.sin(angle) * 2.5]}>
-          <boxGeometry args={[0.3, 0.5, 0.3]} />
-          <meshStandardMaterial color="#666666" metalness={0.6} roughness={0.4} />
-        </mesh>
-      ))}
-      
-      {/* Central antenna */}
-      <mesh position={[0, 1, 0]}>
-        <cylinderGeometry args={[0.05, 0.05, 1.5, 8]} />
-        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.3} />
       </mesh>
     </group>
   );
@@ -335,54 +271,54 @@ export const PlanetSystem = ({ onPlanetClick }: { onPlanetClick: (planet: string
       {/* Central Space Station */}
       <SpaceStation onClick={() => onPlanetClick('station')} />
       
-      {/* VetNav - Front Right */}
-      <Suspense fallback={<LoadingPlanet position={[12, -3, 8]} color="#2563eb" emissive="#1e40af" name="VetNav" onClick={() => onPlanetClick('vetnav')} size={0.9} />}>
+      {/* VetNav - Front Right (larger, more spread out) */}
+      <Suspense fallback={<LoadingPlanet position={[20, -5, 15]} color="#2563eb" emissive="#1e40af" name="VetNav" onClick={() => onPlanetClick('vetnav')} size={1.8} />}>
         <StationaryPlanet 
-          position={[12, -3, 8]}
+          position={[20, -5, 15]}
           color="#2563eb"
           emissive="#1e40af"
           name="VetNav"
           textureSet="greenPlanet"
-          size={0.9}
+          size={1.8}
           onClick={() => onPlanetClick('vetnav')}
         />
       </Suspense>
       
-      {/* Tariff Explorer - Far Right */}
-      <Suspense fallback={<LoadingPlanet position={[18, 2, -5]} color="#10b981" emissive="#059669" name="Tariff Explorer" onClick={() => onPlanetClick('tariff')} size={1.1} />}>
+      {/* Tariff Explorer - Far Right (larger, more spread out) */}
+      <Suspense fallback={<LoadingPlanet position={[35, 4, -10]} color="#10b981" emissive="#059669" name="Tariff Explorer" onClick={() => onPlanetClick('tariff')} size={2.2} />}>
         <StationaryPlanet 
-          position={[18, 2, -5]}
+          position={[35, 4, -10]}
           color="#10b981"
           emissive="#059669"
           name="Tariff Explorer"
           textureSet="gasPlanet"
-          size={1.1}
+          size={2.2}
           onClick={() => onPlanetClick('tariff')}
         />
       </Suspense>
       
-      {/* Pet Radar - Back Left */}
-      <Suspense fallback={<LoadingPlanet position={[-10, 1, -12]} color="#7c3aed" emissive="#6d28d9" name="Pet Radar" onClick={() => onPlanetClick('petradar')} size={1.0} />}>
+      {/* Pet Radar - Back Left (larger, more spread out) */}
+      <Suspense fallback={<LoadingPlanet position={[-25, 2, -20]} color="#7c3aed" emissive="#6d28d9" name="Pet Radar" onClick={() => onPlanetClick('petradar')} size={1.6} />}>
         <StationaryPlanet 
-          position={[-10, 1, -12]}
+          position={[-25, 2, -20]}
           color="#7c3aed"
           emissive="#6d28d9"
           name="Pet Radar"
           textureSet="desolate dirt planet"
-          size={1.0}
+          size={1.6}
           onClick={() => onPlanetClick('petradar')}
         />
       </Suspense>
       
-      {/* JetsHome - Far Left */}
-      <Suspense fallback={<LoadingPlanet position={[-15, -2, 6]} color="#ea580c" emissive="#dc2626" name="JetsHome" onClick={() => onPlanetClick('jetshome')} size={1.3} />}>
+      {/* JetsHome - Far Left (larger, more spread out) */}
+      <Suspense fallback={<LoadingPlanet position={[-30, -4, 12]} color="#ea580c" emissive="#dc2626" name="JetsHome" onClick={() => onPlanetClick('jetshome')} size={2.0} />}>
         <StationaryPlanet 
-          position={[-15, -2, 6]}
+          position={[-30, -4, 12]}
           color="#ea580c"
           emissive="#dc2626"
           name="JetsHome"
           textureSet="jetsSkin"
-          size={1.3}
+          size={2.0}
           onClick={() => onPlanetClick('jetshome')}
         />
       </Suspense>
