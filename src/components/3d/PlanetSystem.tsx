@@ -269,7 +269,7 @@ export const PlanetSystem = ({ onPlanetClick }: { onPlanetClick: (planet: string
       <pointLight position={[10, 10, 10]} intensity={0.5} />
       
       {/* Central Space Station */}
-      <SpaceStation onClick={() => onPlanetClick('station')} />
+      <SpaceStation position={[0, 10, -15]} onClick={() => onPlanetClick('station')} />
       
       {/* VetNav - Front Right (larger, more spread out) */}
       <Suspense fallback={<LoadingPlanet position={[20, -5, 15]} color="#2563eb" emissive="#1e40af" name="VetNav" onClick={() => onPlanetClick('vetnav')} size={1.8} />}>

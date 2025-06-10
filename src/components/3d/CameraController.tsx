@@ -4,12 +4,10 @@ import { useRef, useEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-interface CameraControllerProps {
   focusTarget?: { position: [number, number, number]; name: string } | null;
   onTransitionComplete?: () => void;
 }
 
-export const CameraController = ({ focusTarget, onTransitionComplete }: CameraControllerProps) => {
   const { camera } = useThree();
   const isTransitioning = useRef(false);
   const startPosition = useRef(new THREE.Vector3());
