@@ -19,39 +19,11 @@ export const CameraController = ({ focusTarget, onTransitionComplete }: CameraCo
   const transitionProgress = useRef(0);
   const transitionDuration = 2.0;
   
+  // Only transition when focusTarget changes, not automatically
   useEffect(() => {
-    if (focusTarget && !isTransitioning.current) {
-      // Start transition to planet
-      isTransitioning.current = true;
-      transitionProgress.current = 0;
-      
-      // Store current camera state
-      startPosition.current.copy(camera.position);
-      startRotation.current.copy(camera.rotation);
-      
-      // Calculate target position (closer to planet)
-      const planetPos = new THREE.Vector3(...focusTarget.position);
-      const distance = 4;
-      const offset = new THREE.Vector3(2, 1, 3);
-      targetPosition.current.copy(planetPos).add(offset);
-      
-      // Look at planet
-      const lookAtMatrix = new THREE.Matrix4().lookAt(targetPosition.current, planetPos, new THREE.Vector3(0, 1, 0));
-      targetRotation.current.setFromRotationMatrix(lookAtMatrix);
-      
-    } else if (!focusTarget && !isTransitioning.current) {
-      // Return to overview
-      isTransitioning.current = true;
-      transitionProgress.current = 0;
-      
-      startPosition.current.copy(camera.position);
-      startRotation.current.copy(camera.rotation);
-      
-      // Return to original overview position
-      targetPosition.current.set(0, 0, 12);
-      targetRotation.current.set(0, 0, 0);
-    }
-  }, [focusTarget, camera]);
+    // Do nothing - remove automatic camera transitions
+    // Camera will only move via user controls (OrbitControls)
+  }, [focusTarget, camera]); // Keep consistent dependencies
   
   useFrame((state, delta) => {
     if (isTransitioning.current) {

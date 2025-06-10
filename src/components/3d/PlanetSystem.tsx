@@ -2,7 +2,7 @@
 
 import { useRef, useState, useMemo, Suspense } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
-import { Text, Points, PointMaterial } from '@react-three/drei';
+import { Points, PointMaterial } from '@react-three/drei';
 import { TextureLoader } from 'three/src/loaders/TextureLoader';
 import * as THREE from 'three';
 
@@ -13,6 +13,7 @@ interface PlanetProps {
   name: string;
   onClick: () => void;
   textureSet?: string;
+  size?: number;
 }
 
 const ParticleRing = ({ position, color, hovered }: { 
@@ -62,42 +63,29 @@ const ParticleRing = ({ position, color, hovered }: {
   );
 };
 
-const TexturedPlanet = ({ position, color, emissive, name, onClick, textureSet }: PlanetProps) => {
+const LoadingPlanet = ({ position, color, emissive, name, onClick, size = 1.2 }: PlanetProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
+  const outerRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
-  
-  // Load Adobe textures
-  const [baseColor, normal, roughness, ao] = useLoader(TextureLoader, [
-    `/textures/${textureSet}_BaseColor.png`,
-    `/textures/${textureSet}_Normal.png`,
-    `/textures/${textureSet}_Roughness.png`,
-    `/textures/${textureSet}_AmbientOcclusion.png`
-  ]);
-
-  // Configure textures
-  useMemo(() => {
-    [baseColor, normal, roughness, ao].forEach(texture => {
-      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-      texture.flipY = false;
-    });
-    baseColor.colorSpace = THREE.SRGBColorSpace;
-  }, [baseColor, normal, roughness, ao]);
   
   useFrame((state, delta) => {
     if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.2;
+      meshRef.current.rotation.y += delta * 0.5;
       
-      if (hovered) {
-        const scale = 1.15 + Math.sin(state.clock.elapsedTime * 3) * 0.05;
-        meshRef.current.scale.setScalar(scale);
-      } else {
-        meshRef.current.scale.lerp(new THREE.Vector3(1, 1, 1), delta * 5);
-      }
+      // Pulsing effect
+      const scale = 0.8 + Math.sin(state.clock.elapsedTime * 2) * 0.2;
+      meshRef.current.scale.setScalar(scale);
+    }
+    
+    if (outerRef.current) {
+      outerRef.current.rotation.y -= delta * 0.3;
+      outerRef.current.rotation.x += delta * 0.2;
     }
   });
   
   return (
     <group position={position} onClick={onClick}>
+      {/* Inner core with wireframe */}
       <mesh
         ref={meshRef}
         onPointerOver={(e) => {
@@ -110,54 +98,104 @@ const TexturedPlanet = ({ position, color, emissive, name, onClick, textureSet }
           setHovered(false);
         }}
       >
-        <sphereGeometry args={[1.2, 64, 64]} />
-        <meshStandardMaterial 
-          map={baseColor}
-          normalMap={normal}
-          roughnessMap={roughness}
-          aoMap={ao}
-          emissive={emissive}
-          emissiveIntensity={hovered ? 0.3 : 0.1}
-          metalness={0.1}
-          roughness={0.8}
+        <icosahedronGeometry args={[size * 0.6, 1]} />
+        <meshBasicMaterial 
+          color={color}
+          wireframe
+          transparent
+          opacity={0.6}
         />
       </mesh>
       
-      {hovered && (
-        <mesh>
-          <sphereGeometry args={[1.5, 32, 32]} />
-          <meshBasicMaterial 
-            color={emissive}
-            transparent
-            opacity={0.2}
-            side={THREE.BackSide}
-          />
-        </mesh>
-      )}
+      {/* Outer scanning shell */}
+      <mesh ref={outerRef}>
+        <sphereGeometry args={[size, 16, 16]} />
+        <meshBasicMaterial 
+          color={emissive}
+          transparent
+          opacity={0.2}
+          wireframe
+        />
+      </mesh>
       
-      <ParticleRing position={[0, 0, 0]} color={emissive} hovered={hovered} />
-      
-      <Text 
-        position={[0, 2.5, 0]} 
-        fontSize={0.35} 
-        color="#ffffff" 
-        anchorX="center"
-        outlineWidth={0.02}
-        outlineColor="#000000"
+      {/* Scanning particles */}
+      <Points
+        positions={useMemo(() => {
+          const positions = new Float32Array(30 * 3);
+          for (let i = 0; i < 30; i++) {
+            const radius = size * 1.5;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+            positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+            positions[i * 3 + 2] = radius * Math.cos(phi);
+          }
+          return positions;
+        }, [size])}
+        stride={3}
+        frustumCulled={false}
       >
-        {name}
-      </Text>
+        <PointMaterial
+          transparent
+          color={emissive}
+          size={0.1}
+          sizeAttenuation={true}
+          depthWrite={false}
+          opacity={0.8}
+          blending={THREE.AdditiveBlending}
+        />
+      </Points>
+      
+      {/* Central glow */}
+      <mesh>
+        <sphereGeometry args={[size * 0.3, 16, 16]} />
+        <meshBasicMaterial 
+          color={emissive}
+          transparent
+          opacity={0.8}
+        />
+      </mesh>
     </group>
   );
 };
 
-const FallbackPlanet = ({ position, color, emissive, name, onClick }: PlanetProps) => {
+const StationaryPlanet = ({ 
+  position, 
+  color, 
+  emissive, 
+  name, 
+  onClick, 
+  textureSet, 
+  size = 1.2 
+}: PlanetProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   
+  // Load Adobe textures if textureSet provided
+  const textures = textureSet ? useLoader(TextureLoader, [
+    `/textures/${textureSet}_BaseColor.png`,
+    `/textures/${textureSet}_Normal.png`,
+    `/textures/${textureSet}_Roughness.png`,
+    `/textures/${textureSet}_AmbientOcclusion.png`
+  ]) : null;
+
+  const [baseColor, normal, roughness, ao] = textures || [];
+
+  // Configure textures
+  useMemo(() => {
+    if (textures) {
+      textures.forEach(texture => {
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        texture.flipY = false;
+      });
+      if (baseColor) baseColor.colorSpace = THREE.SRGBColorSpace;
+    }
+  }, [textures, baseColor]);
+  
   useFrame((state, delta) => {
+    // Only planet rotation, no orbital movement
     if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.2;
+      meshRef.current.rotation.y += delta * 0.3;
       
       if (hovered) {
         const scale = 1.15 + Math.sin(state.clock.elapsedTime * 3) * 0.05;
@@ -182,19 +220,32 @@ const FallbackPlanet = ({ position, color, emissive, name, onClick }: PlanetProp
           setHovered(false);
         }}
       >
-        <sphereGeometry args={[1.2, 32, 32]} />
-        <meshStandardMaterial 
-          color={color} 
-          emissive={emissive} 
-          emissiveIntensity={hovered ? 0.6 : 0.3}
-          metalness={0.2}
-          roughness={0.8}
-        />
+        <sphereGeometry args={[size, 64, 64]} />
+        {textureSet ? (
+          <meshStandardMaterial 
+            map={baseColor}
+            normalMap={normal}
+            roughnessMap={roughness}
+            aoMap={ao}
+            emissive={emissive}
+            emissiveIntensity={hovered ? 0.3 : 0.1}
+            metalness={0.1}
+            roughness={0.8}
+          />
+        ) : (
+          <meshStandardMaterial 
+            color={color} 
+            emissive={emissive} 
+            emissiveIntensity={hovered ? 0.6 : 0.3}
+            metalness={0.2}
+            roughness={0.8}
+          />
+        )}
       </mesh>
       
       {hovered && (
         <mesh>
-          <sphereGeometry args={[1.5, 32, 32]} />
+          <sphereGeometry args={[size * 1.3, 32, 32]} />
           <meshBasicMaterial 
             color={emissive}
             transparent
@@ -205,17 +256,71 @@ const FallbackPlanet = ({ position, color, emissive, name, onClick }: PlanetProp
       )}
       
       <ParticleRing position={[0, 0, 0]} color={emissive} hovered={hovered} />
+    </group>
+  );
+};
+
+const SpaceStation = ({ onClick }: { onClick: () => void }) => {
+  const stationRef = useRef<THREE.Group>(null);
+  const [hovered, setHovered] = useState(false);
+  
+  useFrame((state, delta) => {
+    if (stationRef.current) {
+      stationRef.current.rotation.y += delta * 0.2;
+    }
+  });
+  
+  return (
+    <group 
+      ref={stationRef}
+      onClick={onClick}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        document.body.style.cursor = 'pointer';
+        setHovered(true);
+      }}
+      onPointerOut={() => {
+        document.body.style.cursor = 'auto';
+        setHovered(false);
+      }}
+    >
+      {/* Central hub */}
+      <mesh>
+        <cylinderGeometry args={[1.5, 1.5, 0.8, 16]} />
+        <meshStandardMaterial 
+          color="#cccccc" 
+          metalness={0.8} 
+          roughness={0.2}
+          emissive={hovered ? "#0066ff" : "#000000"}
+          emissiveIntensity={hovered ? 0.2 : 0}
+        />
+      </mesh>
       
-      <Text 
-        position={[0, 2.5, 0]} 
-        fontSize={0.35} 
-        color="#ffffff" 
-        anchorX="center"
-        outlineWidth={0.02}
-        outlineColor="#000000"
-      >
-        {name}
-      </Text>
+      {/* Rotating ring */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[2.5, 0.3, 8, 16]} />
+        <meshStandardMaterial 
+          color="#888888" 
+          metalness={0.7} 
+          roughness={0.3}
+          emissive={hovered ? "#0066ff" : "#000000"}
+          emissiveIntensity={hovered ? 0.1 : 0}
+        />
+      </mesh>
+      
+      {/* Docking ports */}
+      {[0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2].map((angle, i) => (
+        <mesh key={i} position={[Math.cos(angle) * 2.5, 0, Math.sin(angle) * 2.5]}>
+          <boxGeometry args={[0.3, 0.5, 0.3]} />
+          <meshStandardMaterial color="#666666" metalness={0.6} roughness={0.4} />
+        </mesh>
+      ))}
+      
+      {/* Central antenna */}
+      <mesh position={[0, 1, 0]}>
+        <cylinderGeometry args={[0.05, 0.05, 1.5, 8]} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.3} />
+      </mesh>
     </group>
   );
 };
@@ -224,48 +329,60 @@ export const PlanetSystem = ({ onPlanetClick }: { onPlanetClick: (planet: string
   return (
     <group>
       <ambientLight intensity={0.6} />
-      <pointLight position={[10, 10, 10]} intensity={1} />
+      <pointLight position={[0, 5, 0]} intensity={1.5} color="#ffffff" />
+      <pointLight position={[10, 10, 10]} intensity={0.5} />
       
-      <Suspense fallback={<FallbackPlanet position={[-4, 2, 0]} color="#2563eb" emissive="#1e40af" name="VetNav" onClick={() => onPlanetClick('vetnav')} />}>
-        <TexturedPlanet 
-          position={[-4, 2, 0]}
+      {/* Central Space Station */}
+      <SpaceStation onClick={() => onPlanetClick('station')} />
+      
+      {/* VetNav - Front Right */}
+      <Suspense fallback={<LoadingPlanet position={[12, -3, 8]} color="#2563eb" emissive="#1e40af" name="VetNav" onClick={() => onPlanetClick('vetnav')} size={0.9} />}>
+        <StationaryPlanet 
+          position={[12, -3, 8]}
           color="#2563eb"
           emissive="#1e40af"
           name="VetNav"
           textureSet="greenPlanet"
+          size={0.9}
           onClick={() => onPlanetClick('vetnav')}
         />
       </Suspense>
       
-      <Suspense fallback={<FallbackPlanet position={[4, 2, 0]} color="#10b981" emissive="#059669" name="Tariff Explorer" onClick={() => onPlanetClick('tariff')} />}>
-        <TexturedPlanet 
-          position={[4, 2, 0]}
+      {/* Tariff Explorer - Far Right */}
+      <Suspense fallback={<LoadingPlanet position={[18, 2, -5]} color="#10b981" emissive="#059669" name="Tariff Explorer" onClick={() => onPlanetClick('tariff')} size={1.1} />}>
+        <StationaryPlanet 
+          position={[18, 2, -5]}
           color="#10b981"
           emissive="#059669"
           name="Tariff Explorer"
           textureSet="gasPlanet"
+          size={1.1}
           onClick={() => onPlanetClick('tariff')}
         />
       </Suspense>
       
-      <Suspense fallback={<FallbackPlanet position={[-4, -2, 0]} color="#7c3aed" emissive="#6d28d9" name="Pet Radar" onClick={() => onPlanetClick('petradar')} />}>
-        <TexturedPlanet 
-          position={[-4, -2, 0]}
+      {/* Pet Radar - Back Left */}
+      <Suspense fallback={<LoadingPlanet position={[-10, 1, -12]} color="#7c3aed" emissive="#6d28d9" name="Pet Radar" onClick={() => onPlanetClick('petradar')} size={1.0} />}>
+        <StationaryPlanet 
+          position={[-10, 1, -12]}
           color="#7c3aed"
           emissive="#6d28d9"
           name="Pet Radar"
           textureSet="desolate dirt planet"
+          size={1.0}
           onClick={() => onPlanetClick('petradar')}
         />
       </Suspense>
       
-      <Suspense fallback={<FallbackPlanet position={[4, -2, 0]} color="#ea580c" emissive="#dc2626" name="JetsHome" onClick={() => onPlanetClick('jetshome')} />}>
-        <TexturedPlanet 
-          position={[4, -2, 0]}
+      {/* JetsHome - Far Left */}
+      <Suspense fallback={<LoadingPlanet position={[-15, -2, 6]} color="#ea580c" emissive="#dc2626" name="JetsHome" onClick={() => onPlanetClick('jetshome')} size={1.3} />}>
+        <StationaryPlanet 
+          position={[-15, -2, 6]}
           color="#ea580c"
           emissive="#dc2626"
           name="JetsHome"
           textureSet="jetsSkin"
+          size={1.3}
           onClick={() => onPlanetClick('jetshome')}
         />
       </Suspense>
