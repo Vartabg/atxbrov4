@@ -26,9 +26,9 @@ export default function OptimizedPlanetSystem() {
     if (planet) {
      // Smooth camera glide to planet
      const targetPosition = [
-       planet.position[0] + 8,
-       planet.position[1] + 3,
-       planet.position[2] + 10
+       planet.position[0] * 0.7,
+       planet.position[1] * 0.7,
+       planet.position[2] * 0.7 + 15
      ]
      
      gsap.to(camera.position, {
