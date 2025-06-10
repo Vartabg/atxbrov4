@@ -1,0 +1,37 @@
+  const handlePlanetClick = (planetId: string) => {
+    const planet = defaultUniverseConfig.planets.find(p => p.id === planetId)
+    if (planet) {
+      const planetPosition = planet.position
+      const planetRadius = 2 // Safe assumption for planet size
+      
+      // Calculate safe viewing distance (4x planet radius)
+      const safeDistance = planetRadius * 4
+      
+      // Get direction from planet to current camera position
+      const direction = camera.position.clone()
+      direction.sub(new THREE.Vector3(...planetPosition))
+      direction.normalize()
+      
+      // If camera is too close or at origin, use default direction
+      if (direction.length() === 0) {
+        direction.set(1, 0.5, 1).normalize()
+      }
+      
+      // Calculate target camera position
+      const targetCameraPosition = new THREE.Vector3(...planetPosition)
+      targetCameraPosition.add(direction.multiplyScalar(safeDistance))
+      
+      // Animate camera safely
+      gsap.to(camera.position, {
+        duration: 2,
+        x: targetCameraPosition.x,
+        y: targetCameraPosition.y,
+        z: targetCameraPosition.z,
+        ease: "power2.inOut",
+        onComplete: () => {
+          setSelectedPlanet(planetId)
+          setPanelPosition([planet.position[0] + 5, planet.position[1] + 2, planet.position[2]])
+        }
+      })
+    }
+  }

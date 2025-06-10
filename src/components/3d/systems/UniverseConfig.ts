@@ -33,13 +33,13 @@ export interface UniverseConfig {
 
 export const defaultUniverseConfig: UniverseConfig = {
   camera: {
-    initialPosition: [0, 0, 20],
-    fov: 45
+    initialPosition: [0, 0, 25],
+    fov: 50
   },
   planets: [
     {
       id: 'vetnav',
-      position: [-8, 4, -3],
+      position: [-35, 15, -10],  // Top left quadrant
       planetName: 'VETNAV-7',
       planetSubtitle: 'Veterans Benefits Navigator',
       planetData: '18.2M Veterans',
@@ -48,7 +48,7 @@ export const defaultUniverseConfig: UniverseConfig = {
     },
     {
       id: 'tariff',
-      position: [12, -2, 8],
+      position: [30, 20, 8],     // Top right quadrant  
       planetName: 'TARIFF-7',
       planetSubtitle: 'Trade Command Station',
       planetData: '2.4B Trade Records',
@@ -57,7 +57,7 @@ export const defaultUniverseConfig: UniverseConfig = {
     },
     {
       id: 'petradar',
-      position: [-5, -6, 12],
+      position: [-25, -18, 15],  // Bottom left quadrant
       planetName: 'PET-RADAR-9',
       planetSubtitle: 'Animal Rescue Network',
       planetData: '847K Pet Records',
@@ -66,7 +66,7 @@ export const defaultUniverseConfig: UniverseConfig = {
     },
     {
       id: 'jetshome',
-      position: [7, 8, -6],
+      position: [40, -12, -20],  // Bottom right quadrant
       planetName: 'JETS-HOME',
       planetSubtitle: 'Sports Analytics Hub',
       planetData: '156K Game Stats',

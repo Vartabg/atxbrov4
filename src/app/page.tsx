@@ -13,7 +13,7 @@ export default function Home() {
       <div className="relative w-full h-screen">
         <Canvas
           camera={{ 
-            position: [0, 0, 20], 
+            position: [0, 5, 35], 
             fov: 45,
             near: 0.1,
             far: 1000
@@ -44,7 +44,7 @@ export default function Home() {
             />
             
             {/* Interactive Controls */}
-            <OrbitControls
+            <OrbitControls makeDefault
               enablePan={true}
               enableZoom={true}
               enableRotate={true}

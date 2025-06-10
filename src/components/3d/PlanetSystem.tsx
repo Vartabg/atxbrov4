@@ -269,12 +269,12 @@ export const PlanetSystem = ({ onPlanetClick }: { onPlanetClick: (planet: string
       <pointLight position={[10, 10, 10]} intensity={0.5} />
       
       {/* Central Space Station */}
-      <SpaceStation position={[0, 10, -15]} onClick={() => onPlanetClick('station')} />
+      <SpaceStation position={[5, -5, 25]} onClick={() => onPlanetClick('station')} />
       
       {/* VetNav - Front Right (larger, more spread out) */}
-      <Suspense fallback={<LoadingPlanet position={[20, -5, 15]} color="#2563eb" emissive="#1e40af" name="VetNav" onClick={() => onPlanetClick('vetnav')} size={1.8} />}>
+      <Suspense fallback={<LoadingPlanet position={[-35, 15, -10]} color="#2563eb" emissive="#1e40af" name="VetNav" onClick={() => onPlanetClick('vetnav')} size={1.8} />}>
         <StationaryPlanet 
-          position={[20, -5, 15]}
+          position={[-35, 15, -10]}
           color="#2563eb"
           emissive="#1e40af"
           name="VetNav"
@@ -285,9 +285,9 @@ export const PlanetSystem = ({ onPlanetClick }: { onPlanetClick: (planet: string
       </Suspense>
       
       {/* Tariff Explorer - Far Right (larger, more spread out) */}
-      <Suspense fallback={<LoadingPlanet position={[35, 4, -10]} color="#10b981" emissive="#059669" name="Tariff Explorer" onClick={() => onPlanetClick('tariff')} size={2.2} />}>
+      <Suspense fallback={<LoadingPlanet position={[30, 20, 8]} color="#10b981" emissive="#059669" name="Tariff Explorer" onClick={() => onPlanetClick('tariff')} size={2.2} />}>
         <StationaryPlanet 
-          position={[35, 4, -10]}
+          position={[30, 20, 8]}
           color="#10b981"
           emissive="#059669"
           name="Tariff Explorer"
@@ -311,9 +311,9 @@ export const PlanetSystem = ({ onPlanetClick }: { onPlanetClick: (planet: string
       </Suspense>
       
       {/* JetsHome - Far Left (larger, more spread out) */}
-      <Suspense fallback={<LoadingPlanet position={[-30, -4, 12]} color="#ea580c" emissive="#dc2626" name="JetsHome" onClick={() => onPlanetClick('jetshome')} size={2.0} />}>
+      <Suspense fallback={<LoadingPlanet position={[40, -12, -20]} color="#ea580c" emissive="#dc2626" name="JetsHome" onClick={() => onPlanetClick('jetshome')} size={2.0} />}>
         <StationaryPlanet 
-          position={[-30, -4, 12]}
+          position={[40, -12, -20]}
           color="#ea580c"
           emissive="#dc2626"
           name="JetsHome"

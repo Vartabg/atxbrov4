@@ -11,7 +11,7 @@ export default function PerformanceCanvas({ children }: PerformanceCanvasProps) 
   return (
     <Canvas
       camera={{ 
-        position: [0, 0, 20], 
+        position: [0, 5, 35], 
         fov: 45,
         near: 0.1,
         far: 1000

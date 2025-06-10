@@ -17,6 +17,7 @@ function SimpleLoader() {
 }
 
 export default function OptimizedPlanetSystem() {
+  const controls = useThree((state) => state.controls)
  const { camera } = useThree()
   const [selectedPlanet, setSelectedPlanet] = useState<string | null>(null)
   const [panelPosition, setPanelPosition] = useState<[number, number, number]>([0, 0, 5])
@@ -24,20 +25,40 @@ export default function OptimizedPlanetSystem() {
   const handlePlanetClick = (planetId: string) => {
     const planet = defaultUniverseConfig.planets.find(p => p.id === planetId)
     if (planet) {
-     // Smooth camera glide to planet
-     const targetPosition = [
-       planet.position[0] * 0.7,
-       planet.position[1] * 0.7,
-       planet.position[2] * 0.7 + 15
-     ]
-     
-     gsap.to(camera.position, {
-       duration: 2,
-       x: targetPosition[0],
-       y: targetPosition[1],
-       z: targetPosition[2],
-       ease: "power2.inOut"
-     })
+      if (!controls) {
+        console.warn("Controls not available yet")
+        return
+      }
+      
+      controls.enabled = false
+      
+      const targetCameraPos = [
+        planet.position[0] + 6,
+        planet.position[1] + 3,
+        planet.position[2] + 8
+      ]
+      
+      gsap.to(camera.position, {
+        duration: 2,
+        x: targetCameraPos[0],
+        y: targetCameraPos[1],
+        z: targetCameraPos[2],
+        ease: "power2.inOut"
+      })
+      
+      gsap.to(controls.target, {
+        duration: 2,
+        x: planet.position[0],
+        y: planet.position[1],
+        z: planet.position[2],
+        ease: "power2.inOut",
+        onUpdate: () => controls.update(),
+        onComplete: () => {
+          controls.enabled = true
+          controls.update()
+        }
+      })
+      
       setSelectedPlanet(planetId)
       setPanelPosition([planet.position[0] + 5, planet.position[1] + 2, planet.position[2]])
     }
