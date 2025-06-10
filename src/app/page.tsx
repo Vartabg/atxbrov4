@@ -5,6 +5,9 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import { PlanetSystem } from '@/components/3d/PlanetSystem';
 import { VetNavApp } from '@/components/apps/VetNavApp';
+import { TariffExplorerApp } from '@/components/apps/TariffExplorerApp';
+import { PetRadarApp } from '@/components/apps/PetRadarApp';
+import { JetsHomeApp } from '@/components/apps/JetsHomeApp';
 
 export default function Home() {
   const [selectedPlanet, setSelectedPlanet] = useState<string | null>(null);
@@ -16,6 +19,28 @@ export default function Home() {
 
   const closeModal = () => {
     setSelectedPlanet(null);
+  };
+
+  const renderApp = () => {
+    switch (selectedPlanet) {
+      case 'vetnav':
+        return <VetNavApp />;
+      case 'tariff':
+        return <TariffExplorerApp />;
+      case 'petradar':
+        return <PetRadarApp />;
+      case 'jetshome':
+        return <JetsHomeApp />;
+      default:
+        return (
+          <div className="p-8">
+            <h2 className="text-2xl font-bold mb-4 capitalize">{selectedPlanet}</h2>
+            <p className="text-gray-600 mb-6">
+              Welcome to {selectedPlanet}! This will contain the full application.
+            </p>
+          </div>
+        );
+    }
   };
 
   return (
@@ -40,16 +65,7 @@ export default function Home() {
               ✕ Close
             </button>
             
-            {selectedPlanet === 'vetnav' ? (
-              <VetNavApp />
-            ) : (
-              <div className="p-8">
-                <h2 className="text-2xl font-bold mb-4 capitalize">{selectedPlanet}</h2>
-                <p className="text-gray-600 mb-6">
-                  Welcome to {selectedPlanet}! This will contain the full application.
-                </p>
-              </div>
-            )}
+            {renderApp()}
           </div>
         </div>
       )}
