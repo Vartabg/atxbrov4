@@ -1,36 +1,223 @@
 'use client'
 import { useState, useRef, useMemo, useCallback } from 'react'
 import { useFrame, useLoader, useThree } from '@react-three/fiber'
-import { Text, RoundedBox, Points, PointMaterial } from '@react-three/drei'
+import { Text, Points, PointMaterial } from '@react-three/drei'
 import { TextureLoader } from 'three/src/loaders/TextureLoader'
 import * as THREE from 'three'
 import { useAdvancedCamera } from './AdvancedCameraController'
 import InstancedStarField from './InstancedStarField'
 import { SpaceStation } from './SpaceStation'
 
-// Placeholder components - replace with actual implementations
-const SmartPlanet = ({ position, planetName, onSelect, interactionState, isSelected, ...props }: any) => {
-  return <mesh position={position}><sphereGeometry /><meshBasicMaterial color={props.planetColor} /></mesh>
-}
+type InteractionState = 'exploring' | 'transitioning' | 'viewing' | 'accessing'
 
-const SmartHolographicPanel = ({ position, planetData, onClose, onAccess }: any) => {
+const SmartParticleRing = ({ position, color, hovered, isActive }: {
+  position: [number, number, number];
+  color: string;
+  hovered: boolean;
+  isActive: boolean;
+}) => {
+  const pointsRef = useRef<THREE.Points>(null);
+  const particlePositions = useMemo(() => {
+    const positions = new Float32Array(30 * 3);
+    for (let i = 0; i < 30; i++) {
+      const angle = (i / 30) * Math.PI * 2;
+      const radius = 1.25 + (Math.cos(angle * 4) * 0.03);
+      positions[i * 3] = Math.cos(angle) * radius;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 0.1;
+      positions[i * 3 + 2] = Math.sin(angle) * radius;
+    }
+    return positions;
+  }, []);
+
+  useFrame((state) => {
+    if (pointsRef.current) {
+      const speed = isActive ? 0.03 : hovered ? 0.015 : 0.008;
+      pointsRef.current.rotation.y += speed;
+    }
+  });
+
   return (
     <group position={position}>
-      <mesh onClick={onClose}>
-        <boxGeometry args={[2, 1, 0.1]} />
-        <meshBasicMaterial color="#333" />
+      <Points ref={pointsRef} positions={particlePositions}>
+        <PointMaterial 
+          color={color} 
+          transparent 
+          opacity={isActive ? 1.0 : hovered ? 0.8 : 0.6} 
+          size={isActive ? 4 : hovered ? 3 : 2}
+          sizeAttenuation={true}
+        />
+      </Points>
+    </group>
+  );
+};
+
+interface SmartPlanetProps {
+  position: [number, number, number]
+  planetName: string
+  planetSubtitle: string
+  planetData: string
+  planetColor: string
+  appRoute: string
+  textureSet: string
+  size: number
+  onSelect: (planetData: any) => void
+  modalOpen: boolean
+}
+
+function SmartPlanet({ 
+  position, planetName, planetSubtitle, planetData, planetColor, appRoute, 
+  textureSet, size, onSelect, modalOpen
+}: SmartPlanetProps) {
+  const meshRef = useRef<THREE.Mesh>(null!)
+  const atmosphereRef = useRef<THREE.Mesh>(null!)
+  const [hovered, setHovered] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const { gl } = useThree()
+  
+  const canInteract = !modalOpen && !isProcessing
+  
+  // Disable OrbitControls when modal is open
+  useFrame(() => {
+    const canvas = gl.domElement
+    const controls = canvas.parentNode?.querySelector('[class*="orbitControls"]') as any
+    if (controls && controls.object) {
+      controls.enabled = !modalOpen
+    }
+  })
+  
+  const texturePaths = useMemo(() => {
+    const encodedTextureSet = textureSet.replace(/ /g, '%20')
+    return [
+      `/textures/${encodedTextureSet}_BaseColor.png`,
+      `/textures/${encodedTextureSet}_Normal.png`,
+      `/textures/${encodedTextureSet}_Roughness.png`,
+      `/textures/${encodedTextureSet}_AmbientOcclusion.png`,
+      `/textures/${encodedTextureSet}_Height.png`
+    ]
+  }, [textureSet])
+
+  const [baseColor, normal, roughness, ao, height] = useLoader(TextureLoader, texturePaths)
+
+  const planetMaterial = useMemo(() => {
+    const material = new THREE.MeshStandardMaterial({
+      map: baseColor,
+      normalMap: normal,
+      roughnessMap: roughness,
+      aoMap: ao,
+      displacementMap: height,
+      displacementScale: 0.08,
+      color: planetColor,
+      emissive: hovered ? planetColor : '#000000',
+      emissiveIntensity: hovered ? 0.2 : 0.1,
+    })
+    
+    if (baseColor && normal && roughness && ao && height) {
+      [baseColor, normal, roughness, ao, height].forEach(texture => {
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+        texture.minFilter = THREE.LinearMipmapLinearFilter
+        texture.magFilter = THREE.LinearFilter
+      })
+    }
+    
+    return material
+  }, [baseColor, normal, roughness, ao, height, planetColor, hovered])
+
+  const atmosphereMaterial = useMemo(() => new THREE.MeshBasicMaterial({
+    color: planetColor,
+    transparent: true,
+    opacity: hovered ? 0.4 : 0.2,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending
+  }), [planetColor, hovered])
+  
+  useFrame((state, delta) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y += delta * 0.2;
+    }
+    if (atmosphereRef.current) {
+      const pulse = Math.sin(state.clock.elapsedTime) * 0.03 + 1;
+      atmosphereRef.current.scale.setScalar(pulse);
+    }
+  })
+
+  const handleInteraction = useCallback((e: any) => {
+    e.stopPropagation()
+    
+    if (!canInteract || isProcessing) return
+    
+    console.log('🎯 SMART planet selection:', planetName)
+    setIsProcessing(true)
+    
+    const planetDataObj = {
+      name: planetName,
+      subtitle: planetSubtitle,
+      data: planetData,
+      color: planetColor,
+      appRoute: appRoute
+    }
+    
+    setTimeout(() => setIsProcessing(false), 2000)
+    onSelect(planetDataObj)
+  }, [canInteract, isProcessing, planetName, planetSubtitle, planetData, planetColor, appRoute, onSelect])
+
+  return (
+    <group position={position}>
+      <mesh ref={atmosphereRef} scale={size * 1.2}>
+        <sphereGeometry args={[1, 32, 32]} />
+        <primitive object={atmosphereMaterial} />
       </mesh>
+
+      <mesh
+        ref={meshRef}
+        onPointerDown={handleInteraction}
+        onPointerEnter={() => canInteract && setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+        scale={hovered && canInteract ? size * 1.05 : size}
+      >
+        <sphereGeometry args={[1, 64, 64]} />
+        <primitive object={planetMaterial} />
+      </mesh>
+
+      <SmartParticleRing 
+        position={[0, 0, 0]} 
+        color={planetColor} 
+        hovered={hovered && canInteract} 
+        isActive={false}
+      />
+
+      {!modalOpen && (
+        <>
+          <Text
+            position={[0, size * 1.6, 0]}
+            fontSize={0.35}
+            color={planetColor}
+            anchorX="center"
+            anchorY="middle"
+          >
+            {planetName}
+          </Text>
+          <Text
+            position={[0, size * 1.3, 0]}
+            fontSize={0.18}
+            color="#88ccff"
+            anchorX="center"
+            anchorY="middle"
+          >
+            {planetSubtitle}
+          </Text>
+        </>
+      )}
     </group>
   )
 }
 
-export default function SmartInteractionSystem() {
-  // State management
-  const [selectedPlanet, setSelectedPlanet] = useState<any>(null)
-  const [panelPosition, setPanelPosition] = useState<[number, number, number]>([0, 0, 0])
-  const [interactionState, setInteractionState] = useState<'exploring' | 'transitioning' | 'viewing' | 'accessing'>('exploring')
-  
-  const { transitionToTarget, enableFreeNavigation } = useAdvancedCamera()
+interface SmartInteractionSystemProps {
+  onPlanetSelect: (planetData: any) => void
+  modalOpen: boolean
+}
+
+export default function SmartInteractionSystem({ onPlanetSelect, modalOpen }: SmartInteractionSystemProps) {
+  const { transitionToTarget } = useAdvancedCamera()
 
   const planets = [
     {
@@ -40,7 +227,7 @@ export default function SmartInteractionSystem() {
       planetData: '18.2M Veterans',
       planetColor: '#4a9eff',
       appRoute: '/vetnav',
-      textureSet: 'desolate dirt planet',
+      textureSet: 'greenPlanet',
       size: 2.2
     },
     {
@@ -50,7 +237,7 @@ export default function SmartInteractionSystem() {
       planetData: '2.4B Trade Records',
       planetColor: '#ff6b47',
       appRoute: '/tariff-explorer',
-      textureSet: 'desolate dirt planet',
+      textureSet: 'gasPlanet',
       size: 2.8
     },
     {
@@ -70,58 +257,29 @@ export default function SmartInteractionSystem() {
       planetData: '156K Game Stats',
       planetColor: '#06ffa5',
       appRoute: '/jets-home',
-      textureSet: 'desolate dirt planet',
+      textureSet: 'jetsSkin',
       size: 2.4
     }
   ]
 
-  // SMART PLANET SELECTION
-  const handlePlanetSelection = useCallback((planetData: any, planetPos: THREE.Vector3) => {
-    if (interactionState !== 'exploring') return
-    
+  const handlePlanetSelection = useCallback((planetData: any) => {
     console.log('🚀 SMART SELECTION:', planetData.name)
-    setInteractionState('transitioning')
+    
+    // Find planet position for camera transition
+    const planetPositions: { [key: string]: [number, number, number] } = {
+      'VETNAV-7': [-15, 6, -8],
+      'TARIFF-7': [18, -4, 12],
+      'PET-RADAR-9': [-12, -10, 18],
+      'JETS-HOME': [15, 14, -12]
+    }
+    
+    const planetPos = new THREE.Vector3(...(planetPositions[planetData.name] || [0, 0, 0]))
     
     transitionToTarget(planetPos, 2.5, () => {
-      const panelOffset = new THREE.Vector3(6, 2, 2)
-      const panelPos: [number, number, number] = [
-        planetPos.x + panelOffset.x,
-        planetPos.y + panelOffset.y,
-        planetPos.z + panelOffset.z
-      ]
-      
-      setSelectedPlanet(planetData)
-      setPanelPosition(panelPos)
-      setInteractionState('viewing')
-      
-      console.log('🎬 SMART HUD materialized - Stage 2 active!')
+      onPlanetSelect(planetData)
+      console.log('🎬 SMART HUD materialized!')
     })
-  }, [interactionState, transitionToTarget])
-
-  // SMART EXIT HANDLERS
-  const handleClosePanel = useCallback(() => {
-    console.log('🔄 SMART EXIT - Returning to exploration')
-    setInteractionState('transitioning')
-    setSelectedPlanet(null)
-    enableFreeNavigation()
-    
-    setTimeout(() => {
-      setInteractionState('exploring')
-    }, 1500)
-  }, [enableFreeNavigation])
-
-  const handleAccess = useCallback((route: string) => {
-    console.log('🎯 SMART ACCESS:', route)
-    setInteractionState('accessing')
-    window.location.href = route
-  }, [])
-
-  const handleBackgroundClick = useCallback((e: any) => {
-    if (interactionState === 'viewing') {
-      console.log('🔄 Background click - Smart exit')
-      handleClosePanel()
-    }
-  }, [interactionState, handleClosePanel])
+  }, [transitionToTarget, onPlanetSelect])
 
   return (
     <>
@@ -137,21 +295,9 @@ export default function SmartInteractionSystem() {
           key={index}
           {...planet}
           onSelect={handlePlanetSelection}
-          interactionState={interactionState}
-          isSelected={selectedPlanet?.name === planet.planetName}
+          modalOpen={modalOpen}
         />
       ))}
-      
-      {selectedPlanet && interactionState === 'viewing' && (
-        <SmartHolographicPanel
-          position={panelPosition}
-          planetData={selectedPlanet}
-          visible={true}
-          onClose={handleClosePanel}
-          onAccess={handleAccess}
-          onBackgroundClick={handleBackgroundClick}
-        />
-      )}
     </>
   )
 }

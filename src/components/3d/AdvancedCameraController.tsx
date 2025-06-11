@@ -161,44 +161,13 @@ export function useAdvancedCamera() {
   }
 
   const enableFreeNavigation = () => {
-    console.log('🚀 INITIATING TAKEOFF SEQUENCE - Launching from planet!')
+    console.log('🔓 SMART FREE ROAM - Re-enabling controls without camera jump')
     
-    // Smooth return to overview position
-    const overviewPosition = new THREE.Vector3(0, 15, 25)
-    const overviewTarget = new THREE.Vector3(0, 0, 0)
-    
-    // Animate back to overview using the same cinematic system
-    targetState.current = {
-      position: overviewPosition,
-      quaternion: new THREE.Quaternion().setFromRotationMatrix(
-        new THREE.Matrix4().lookAt(overviewPosition, overviewTarget, new THREE.Vector3(0, 1, 0))
-      ),
-      velocity: new THREE.Vector3(0, 0, 0),
-      angularVelocity: new THREE.Quaternion(0, 0, 0, 1)
+    // Simply re-enable controls without moving camera
+    if (controls) {
+      (controls as any).enabled = true
+      console.log('🔓 OrbitControls RE-ENABLED - True free navigation restored!')
     }
-    
-    currentState.current = {
-      position: camera.position.clone(),
-      quaternion: camera.quaternion.clone(),
-      velocity: new THREE.Vector3(0, 0, 0),
-      angularVelocity: new THREE.Quaternion(0, 0, 0, 1)
-    }
-    
-    isAnimating.current = true
-    animationProgress.current = 0
-    hudTriggered.current = false
-    
-    onComplete.current = () => {
-      // Re-enable controls AFTER smooth return
-      if (controls) {
-        (controls as any).enabled = true
-        console.log('🔓 OrbitControls RE-ENABLED - Free navigation restored!')
-      }
-    }
-    
-    console.log('🚀 TAKEOFF SEQUENCE: Smooth pullback to overview position')
-    console.log('Direction Vector (Takeoff):', overviewPosition.clone().sub(camera.position).normalize().toArray())
-    console.log('Takeoff Distance:', camera.position.distanceTo(overviewPosition))
   }
 
   return { transitionToTarget, enableFreeNavigation }
