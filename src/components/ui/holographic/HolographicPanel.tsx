@@ -55,7 +55,7 @@ wireframe
     color="#00ffff"
     anchorX="center"
     anchorY="middle"
-    font="/fonts/orbitron-bold.woff"
+    
   >
     {planetData.name}
   </Text>
@@ -67,7 +67,7 @@ wireframe
     color="#88ccff"
     anchorX="center"
     anchorY="middle"
-    font="/fonts/orbitron-regular.woff"
+    
   >
     {planetData.subtitle}
   </Text>
@@ -79,7 +79,7 @@ wireframe
     color="#ffffff"
     anchorX="center"
     anchorY="middle"
-    font="/fonts/orbitron-regular.woff"
+    
   >
     {planetData.data}
   </Text>

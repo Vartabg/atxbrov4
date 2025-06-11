@@ -2,7 +2,7 @@
 import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
-import OptimizedPlanetSystem from '@/components/3d/OptimizedPlanetSystem'
+import SmartInteractionSystem from '@/components/3d/SmartInteractionSystem'
 import { SpaceStation } from '@/components/3d/SpaceStation'
 import { EnhancedCosmicBackground } from '@/components/3d/EnhancedCosmicBackground'
 
@@ -32,7 +32,7 @@ export default function Home() {
             <SpaceStation />
             
             {/* Interactive Holographic Planet System */}
-            <OptimizedPlanetSystem />
+            <SmartInteractionSystem />
             
             {/* Ambient Lighting */}
             <ambientLight intensity={0.4} color="#ffffff" />
