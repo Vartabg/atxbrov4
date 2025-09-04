@@ -62,7 +62,10 @@ export const CosmicBackground = () => {
     // Animate nebula
     if (nebulaRef.current) {
       nebulaRef.current.rotation.y += delta * 0.02;
-      nebulaRef.current.material.opacity = 0.15 + Math.sin(state.clock.elapsedTime * 0.5) * 0.05;
+      const material = nebulaRef.current.material as THREE.MeshBasicMaterial;
+      if (material && 'opacity' in material) {
+        material.opacity = 0.15 + Math.sin(state.clock.elapsedTime * 0.5) * 0.05;
+      }
     }
     
     // Animate shooting stars

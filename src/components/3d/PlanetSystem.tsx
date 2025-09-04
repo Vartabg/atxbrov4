@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef, useState, useMemo, Suspense } from 'react';
-import { useFrame, useLoader } from '@react-three/fiber';
+import { useRef, useMemo, Suspense } from 'react';
+import { useFrame } from '@react-three/fiber';
 import { Points, PointMaterial } from '@react-three/drei';
-import { TextureLoader } from 'three/src/loaders/TextureLoader';
 import { SpaceStation } from './SpaceStation';
 import * as THREE from 'three';
 
@@ -68,46 +67,15 @@ const StationaryPlanet = ({
   position, 
   color, 
   emissive, 
-  name, 
   onClick, 
-  textureSet, 
   size = 1.2 
 }: PlanetProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
-  const [hovered, setHovered] = useState(false);
-  
-  // Load Adobe textures if textureSet provided
-  const textures = textureSet ? useLoader(TextureLoader, [
-    `/textures/${textureSet}_BaseColor.png`,
-    `/textures/${textureSet}_Normal.png`,
-    `/textures/${textureSet}_Roughness.png`,
-    `/textures/${textureSet}_AmbientOcclusion.png`
-  ]) : null;
-
-  const [baseColor, normal, roughness, ao] = textures || [];
-
-  // Configure textures
-  useMemo(() => {
-    if (textures) {
-      textures.forEach(texture => {
-        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-        texture.flipY = false;
-      });
-      if (baseColor) baseColor.colorSpace = THREE.SRGBColorSpace;
-    }
-  }, [textures, baseColor]);
   
   useFrame((state, delta) => {
     // Only planet rotation, no orbital movement
     if (meshRef.current) {
       meshRef.current.rotation.y += delta * 0.3;
-      
-      if (hovered) {
-        const scale = 1.15 + Math.sin(state.clock.elapsedTime * 3) * 0.05;
-        meshRef.current.scale.setScalar(scale);
-      } else {
-        meshRef.current.scale.lerp(new THREE.Vector3(1, 1, 1), delta * 5);
-      }
     }
   });
   
@@ -118,57 +86,29 @@ const StationaryPlanet = ({
         onPointerOver={(e) => {
           e.stopPropagation();
           document.body.style.cursor = 'pointer';
-          setHovered(true);
         }}
         onPointerOut={() => {
           document.body.style.cursor = 'auto';
-          setHovered(false);
         }}
       >
         <sphereGeometry args={[size, 64, 64]} />
-        {textureSet ? (
-          <meshStandardMaterial 
-            map={baseColor}
-            normalMap={normal}
-            roughnessMap={roughness}
-            aoMap={ao}
-            emissive={emissive}
-            emissiveIntensity={hovered ? 0.3 : 0.1}
-            metalness={0.1}
-            roughness={0.8}
-          />
-        ) : (
-          <meshStandardMaterial 
-            color={color} 
-            emissive={emissive} 
-            emissiveIntensity={hovered ? 0.6 : 0.3}
-            metalness={0.2}
-            roughness={0.8}
-          />
-        )}
+        <meshStandardMaterial 
+          color={color} 
+          emissive={emissive} 
+          emissiveIntensity={0.3}
+          metalness={0.2}
+          roughness={0.8}
+        />
       </mesh>
       
-      {hovered && (
-        <mesh>
-          <sphereGeometry args={[size * 1.3, 32, 32]} />
-          <meshBasicMaterial 
-            color={emissive}
-            transparent
-            opacity={0.2}
-            side={THREE.BackSide}
-          />
-        </mesh>
-      )}
-      
-      <ParticleRing position={[0, 0, 0]} color={emissive} hovered={hovered} />
+      <ParticleRing position={[0, 0, 0]} color={emissive} hovered={false} />
     </group>
   );
 };
 
-const LoadingPlanet = ({ position, color, emissive, name, onClick, size = 1.2 }: PlanetProps) => {
+const LoadingPlanet = ({ position, color, emissive, onClick, size = 1.2 }: PlanetProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const outerRef = useRef<THREE.Mesh>(null);
-  const [hovered, setHovered] = useState(false);
   
   useFrame((state, delta) => {
     if (meshRef.current) {
@@ -193,11 +133,9 @@ const LoadingPlanet = ({ position, color, emissive, name, onClick, size = 1.2 }:
         onPointerOver={(e) => {
           e.stopPropagation();
           document.body.style.cursor = 'pointer';
-          setHovered(true);
         }}
         onPointerOut={() => {
           document.body.style.cursor = 'auto';
-          setHovered(false);
         }}
       >
         <icosahedronGeometry args={[size * 0.6, 1]} />
@@ -269,7 +207,9 @@ export const PlanetSystem = ({ onPlanetClick }: { onPlanetClick: (planet: string
       <pointLight position={[10, 10, 10]} intensity={0.5} />
       
       {/* Central Space Station */}
-      <SpaceStation position={[5, -5, 25]} onClick={() => onPlanetClick('station')} />
+      <group position={[5, -5, 25]}>
+        <SpaceStation onClick={() => onPlanetClick('station')} />
+      </group>
       
       {/* VetNav - Front Right (larger, more spread out) */}
       <Suspense fallback={<LoadingPlanet position={[-35, 15, -10]} color="#2563eb" emissive="#1e40af" name="VetNav" onClick={() => onPlanetClick('vetnav')} size={1.8} />}>
