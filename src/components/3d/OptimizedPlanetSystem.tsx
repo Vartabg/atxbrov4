@@ -30,7 +30,10 @@ export default function OptimizedPlanetSystem() {
         return
       }
       
-      controls.enabled = false
+      // Disable controls during transition
+      if ('enabled' in controls) {
+        (controls as { enabled: boolean }).enabled = false
+      }
       
       const targetCameraPos = [
         planet.position[0] + 6,
@@ -46,18 +49,30 @@ export default function OptimizedPlanetSystem() {
         ease: "power2.inOut"
       })
       
-      gsap.to(controls.target, {
-        duration: 2,
-        x: planet.position[0],
-        y: planet.position[1],
-        z: planet.position[2],
-        ease: "power2.inOut",
-        onUpdate: () => controls.update(),
-        onComplete: () => {
-          controls.enabled = true
-          controls.update()
-        }
-      })
+      // Animate controls target if available
+      if ('target' in controls) {
+        gsap.to((controls as { target: { x: number; y: number; z: number } }).target, {
+          duration: 2,
+          x: planet.position[0],
+          y: planet.position[1],
+          z: planet.position[2],
+          ease: "power2.inOut",
+          onUpdate: () => {
+            if ('update' in controls) {
+              (controls as { update: () => void }).update()
+            }
+          },
+          onComplete: () => {
+            // Re-enable controls after transition
+            if ('enabled' in controls) {
+              (controls as { enabled: boolean }).enabled = true
+            }
+            if ('update' in controls) {
+              (controls as { update: () => void }).update()
+            }
+          }
+        })
+      }
       
       setSelectedPlanet(planetId)
       setPanelPosition([planet.position[0] + 5, planet.position[1] + 2, planet.position[2]])

@@ -1,7 +1,7 @@
 'use client'
 import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Stars } from '@react-three/drei'
+import { OrbitControls } from '@react-three/drei'
 import OptimizedPlanetSystem from '@/components/3d/OptimizedPlanetSystem'
 import { SpaceStation } from '@/components/3d/SpaceStation'
 import { EnhancedCosmicBackground } from '@/components/3d/EnhancedCosmicBackground'
@@ -29,7 +29,7 @@ export default function Home() {
             <EnhancedCosmicBackground />
             
             {/* Imperial Command Citadel */}
-            <SpaceStation />
+            <SpaceStation onClick={() => {}} />
             
             {/* Interactive Holographic Planet System */}
             <OptimizedPlanetSystem />

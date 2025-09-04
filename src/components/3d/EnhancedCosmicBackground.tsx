@@ -170,7 +170,10 @@ export const EnhancedCosmicBackground = () => {
     // Animate nebula
     if (nebulaRef.current) {
       nebulaRef.current.rotation.y += delta * 0.003;
-      nebulaRef.current.material.uniforms.time.value = state.clock.elapsedTime;
+      const material = nebulaRef.current.material as THREE.ShaderMaterial;
+      if (material && material.uniforms && material.uniforms.time) {
+        material.uniforms.time.value = state.clock.elapsedTime;
+      }
     }
     
     // Animate shooting stars

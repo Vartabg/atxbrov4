@@ -2,7 +2,7 @@
 
 import { useRef, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text, Points, PointMaterial } from '@react-three/drei';
+import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface SpaceStationProps {
@@ -90,8 +90,9 @@ export const SpaceStation = ({ onClick }: SpaceStationProps) => {
     if (hangarRef.current) {
       const activity = 0.3 + Math.sin(state.clock.elapsedTime * 4) * 0.2;
       hangarRef.current.children.forEach((child, i) => {
-        if (child.material && child.material.emissiveIntensity !== undefined) {
-          child.material.emissiveIntensity = activity * (0.2 + (i % 4) * 0.1);
+        const mesh = child as THREE.Mesh;
+        if (mesh.material && 'emissiveIntensity' in mesh.material) {
+          (mesh.material as THREE.MeshStandardMaterial).emissiveIntensity = activity * (0.2 + (i % 4) * 0.1);
         }
       });
     }
@@ -100,8 +101,9 @@ export const SpaceStation = ({ onClick }: SpaceStationProps) => {
     if (navLightsRef.current) {
       const sequence = Math.floor(state.clock.elapsedTime * 1.5) % 6;
       navLightsRef.current.children.forEach((child, i) => {
-        if (child.material && child.material.opacity !== undefined) {
-          child.material.opacity = (i % 6 === sequence) ? 1 : 0.1;
+        const mesh = child as THREE.Mesh;
+        if (mesh.material && 'opacity' in mesh.material) {
+          (mesh.material as THREE.MeshBasicMaterial).opacity = (i % 6 === sequence) ? 1 : 0.1;
         }
       });
     }
