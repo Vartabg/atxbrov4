@@ -6,12 +6,15 @@ export interface PlanetConfig {
   planetData: string
   planetColor?: string
   appRoute: string
-  textureSet?: {
+  textureSet: {
     baseColor: string
     normal: string
     roughness: string
     ao: string
     height: string
+    metallic?: string
+    opacity?: string
+    specular?: string
   }
 }
 
