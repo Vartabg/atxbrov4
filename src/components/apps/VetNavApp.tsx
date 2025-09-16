@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from 'react';
+import { VetNavMapCanvas } from '../3d/VetNavMapCanvas';
+import { StateDetailsPanel } from '../vetnav/StateDetailsPanel';
+import { StateData } from '../../data/usStatesData';
 
 export const VetNavApp = () => {
   const [activeSection, setActiveSection] = useState('benefits');
+  const [selectedState, setSelectedState] = useState<StateData | null>(null);
 
   return (
     <div className="min-h-full bg-gradient-to-b from-blue-900 to-blue-600 text-white p-6">
@@ -80,15 +84,45 @@ export const VetNavApp = () => {
         )}
 
         {activeSection === 'map' && (
-          <div className="bg-white bg-opacity-10 rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Interactive State Map</h2>
-            <p className="text-blue-200">3D map functionality will be integrated here</p>
-            <div className="mt-4 p-4 bg-blue-800 rounded">
-              <p className="text-sm">Click on any state to view specific veterans benefits and resources available in that location.</p>
+          <div className="space-y-4">
+            <div className="bg-white bg-opacity-10 rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">Interactive State Map</h2>
+              <p className="text-blue-200 mb-4">
+                Explore veterans benefits data by state. Click on any state marker to view detailed information about benefits, 
+                facilities, and programs available in that location.
+              </p>
+              
+              {/* 3D Map Canvas */}
+              <VetNavMapCanvas 
+                onStateSelect={setSelectedState}
+                selectedStateCode={selectedState?.code}
+              />
+              
+              {/* Quick Stats */}
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-blue-800 p-3 rounded text-center">
+                  <div className="text-2xl font-bold text-blue-200">18.2M</div>
+                  <div className="text-sm">Total US Veterans</div>
+                </div>
+                <div className="bg-blue-800 p-3 rounded text-center">
+                  <div className="text-2xl font-bold text-green-300">50+</div>
+                  <div className="text-sm">State Programs</div>
+                </div>
+                <div className="bg-blue-800 p-3 rounded text-center">
+                  <div className="text-2xl font-bold text-yellow-300">1,200+</div>
+                  <div className="text-sm">VA Facilities</div>
+                </div>
+              </div>
             </div>
           </div>
         )}
       </div>
+      
+      {/* State Details Panel */}
+      <StateDetailsPanel 
+        stateData={selectedState}
+        onClose={() => setSelectedState(null)}
+      />
     </div>
   );
 };
