@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
 
-## Getting Started
+# 🌌 ATX Bro v4
 
-First, run the development server:
+**Interactive 3D Solar System Portfolio**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+*Navigate a solar system. Dock at a space station. Enter the Stargate.*
+
+[![Next.js](https://img.shields.io/badge/Next.js-0D1117?style=flat-square&logo=nextdotjs&logoColor=00D4FF)](https://nextjs.org)
+[![Three.js](https://img.shields.io/badge/Three.js-0D1117?style=flat-square&logo=threedotjs&logoColor=00D4FF)](https://threejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-0D1117?style=flat-square&logo=typescript&logoColor=00D4FF)](https://typescriptlang.org)
+[![Vercel](https://img.shields.io/badge/Deployed_on-Vercel-0D1117?style=flat-square&logo=vercel&logoColor=00D4FF)](https://atxbro.com)
+
+</div>
+
+---
+
+## What Is This
+
+A portfolio site disguised as a space game. Instead of a boring list of projects, visitors fly through a solar system where each planet represents a skill domain. Approach a planet to see its details. Dock at the central space station. Pass through the Stargate to enter the application layer.
+
+Built with **Next.js 15**, **React Three Fiber**, and custom **GLSL shaders** for planet surfaces, atmospheric glow, and post-processing effects.
+
+## Architecture
+
+```
+src/
+├── components/
+│   ├── SolarSystem/       # Planet configs, orbit mechanics, camera rig
+│   ├── SpaceStation/      # Dockable station with morph geometry
+│   ├── Stargate/          # Warp transition + Next.js routing bridge
+│   └── HUD/               # In-canvas UI overlays (no DOM layering)
+├── shaders/               # Custom GLSL (atmosphere, fresnel, noise)
+├── hooks/                 # useCamera, useNavigation, usePlanetData
+└── app/                   # Next.js app router pages
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 15 (App Router) |
+| 3D Engine | React Three Fiber + Drei |
+| Shaders | Custom GLSL (vertex + fragment) |
+| State | Zustand |
+| Styling | Tailwind CSS |
+| Deployment | Vercel |
+| Language | TypeScript (98.7%) |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Run Locally
 
-## Learn More
+```bash
+git clone https://github.com/Vartabg/atxbrov4.git
+cd atxbrov4
+npm install
+npm run dev
+# Open http://localhost:3000
+```
 
-To learn more about Next.js, take a look at the following resources:
+## License
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
