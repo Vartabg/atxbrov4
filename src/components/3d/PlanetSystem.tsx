@@ -1,9 +1,11 @@
 "use client";
 
-import { useRef, useMemo, Suspense } from 'react';
+import { useRef, useMemo, Suspense, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Points, PointMaterial } from '@react-three/drei';
 import { SpaceStation } from './SpaceStation';
+import { defaultUniverseConfig, PlanetConfig } from './systems/UniverseConfig';
+import { usePlanetMaterial } from './hooks/usePlanetMaterial';
 import * as THREE from 'three';
 
 interface PlanetProps {
@@ -12,7 +14,7 @@ interface PlanetProps {
   emissive: string;
   name: string;
   onClick: () => void;
-  textureSet?: string;
+  planetConfig?: PlanetConfig;
   size?: number;
 }
 
@@ -68,14 +70,45 @@ const StationaryPlanet = ({
   color, 
   emissive, 
   onClick, 
+  planetConfig,
   size = 1.2 
 }: PlanetProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
+  
+  // Determine planet type for material system
+  const getPlanetType = (config?: PlanetConfig) => {
+    if (!config) return 'terrestrial';
+    switch (config.id) {
+      case 'vetnav': return 'terrestrial';
+      case 'tariff': return 'gas';
+      case 'petradar': return 'desolate';
+      case 'jetshome': return 'sports';
+      default: return 'terrestrial';
+    }
+  };
+
+  // Always call hook - handle conditional logic inside the hook
+  const planetType = getPlanetType(planetConfig) as 'terrestrial' | 'gas' | 'desolate' | 'sports';
+  const { material, isLoading } = usePlanetMaterial(planetConfig || null, { 
+    hovered, 
+    planetType,
+    fallbackColor: color,
+    fallbackEmissive: emissive
+  });
   
   useFrame((state, delta) => {
     // Only planet rotation, no orbital movement
     if (meshRef.current) {
       meshRef.current.rotation.y += delta * 0.3;
+      
+      // Subtle scale animation while loading
+      if (isLoading) {
+        const scale = 0.9 + Math.sin(state.clock.elapsedTime * 2) * 0.1;
+        meshRef.current.scale.setScalar(scale);
+      } else {
+        meshRef.current.scale.setScalar(1);
+      }
     }
   });
   
@@ -86,22 +119,31 @@ const StationaryPlanet = ({
         onPointerOver={(e) => {
           e.stopPropagation();
           document.body.style.cursor = 'pointer';
+          setHovered(true);
         }}
         onPointerOut={() => {
           document.body.style.cursor = 'auto';
+          setHovered(false);
         }}
       >
         <sphereGeometry args={[size, 64, 64]} />
-        <meshStandardMaterial 
-          color={color} 
-          emissive={emissive} 
-          emissiveIntensity={0.3}
-          metalness={0.2}
-          roughness={0.8}
-        />
+        <primitive object={material} attach="material" />
       </mesh>
       
-      <ParticleRing position={[0, 0, 0]} color={emissive} hovered={false} />
+      <ParticleRing position={[0, 0, 0]} color={emissive} hovered={hovered} />
+      
+      {/* Loading indicator */}
+      {isLoading && (
+        <mesh>
+          <sphereGeometry args={[size * 1.1, 16, 16]} />
+          <meshBasicMaterial 
+            color="#ffffff"
+            wireframe
+            transparent
+            opacity={0.3}
+          />
+        </mesh>
+      )}
     </group>
   );
 };
@@ -200,6 +242,13 @@ const LoadingPlanet = ({ position, color, emissive, onClick, size = 1.2 }: Plane
 };
 
 export const PlanetSystem = ({ onPlanetClick }: { onPlanetClick: (planet: string) => void }) => {
+  // Get planet configurations
+  const planets = defaultUniverseConfig.planets;
+  const vetnavConfig = planets.find(p => p.id === 'vetnav');
+  const tariffConfig = planets.find(p => p.id === 'tariff');
+  const petradarConfig = planets.find(p => p.id === 'petradar');
+  const jetshomeConfig = planets.find(p => p.id === 'jetshome');
+  
   return (
     <group>
       <ambientLight intensity={0.6} />
@@ -218,7 +267,7 @@ export const PlanetSystem = ({ onPlanetClick }: { onPlanetClick: (planet: string
           color="#2563eb"
           emissive="#1e40af"
           name="VetNav"
-          textureSet="greenPlanet"
+          planetConfig={vetnavConfig}
           size={1.8}
           onClick={() => onPlanetClick('vetnav')}
         />
@@ -231,7 +280,7 @@ export const PlanetSystem = ({ onPlanetClick }: { onPlanetClick: (planet: string
           color="#10b981"
           emissive="#059669"
           name="Tariff Explorer"
-          textureSet="gasPlanet"
+          planetConfig={tariffConfig}
           size={2.2}
           onClick={() => onPlanetClick('tariff')}
         />
@@ -244,7 +293,7 @@ export const PlanetSystem = ({ onPlanetClick }: { onPlanetClick: (planet: string
           color="#7c3aed"
           emissive="#6d28d9"
           name="Pet Radar"
-          textureSet="desolate dirt planet"
+          planetConfig={petradarConfig}
           size={1.6}
           onClick={() => onPlanetClick('petradar')}
         />
@@ -257,7 +306,7 @@ export const PlanetSystem = ({ onPlanetClick }: { onPlanetClick: (planet: string
           color="#ea580c"
           emissive="#dc2626"
           name="JetsHome"
-          textureSet="jetsSkin"
+          planetConfig={jetshomeConfig}
           size={2.0}
           onClick={() => onPlanetClick('jetshome')}
         />

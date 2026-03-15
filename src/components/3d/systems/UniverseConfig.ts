@@ -6,12 +6,15 @@ export interface PlanetConfig {
   planetData: string
   planetColor?: string
   appRoute: string
-  textureSet?: {
+  textureSet: {
     baseColor: string
     normal: string
     roughness: string
     ao: string
     height: string
+    metallic?: string
+    opacity?: string
+    specular?: string
   }
 }
 
@@ -44,7 +47,16 @@ export const defaultUniverseConfig: UniverseConfig = {
       planetSubtitle: 'Veterans Benefits Navigator',
       planetData: '18.2M Veterans',
       planetColor: '#4a9eff',
-      appRoute: '/vetnav'
+      appRoute: '/vetnav',
+      textureSet: {
+        baseColor: '/textures/greenPlanet_BaseColor.png',
+        normal: '/textures/greenPlanet_Normal.png',
+        roughness: '/textures/greenPlanet_Roughness.png',
+        ao: '/textures/greenPlanet_AmbientOcclusion.png',
+        height: '/textures/greenPlanet_Height.png',
+        metallic: '/textures/greenPlanet_Metallic.png',
+        opacity: '/textures/greenPlanet_Opacity.png'
+      }
     },
     {
       id: 'tariff',
@@ -53,7 +65,17 @@ export const defaultUniverseConfig: UniverseConfig = {
       planetSubtitle: 'Trade Command Station',
       planetData: '2.4B Trade Records',
       planetColor: '#ff6b47',
-      appRoute: '/tariff-explorer'
+      appRoute: '/tariff-explorer',
+      textureSet: {
+        baseColor: '/textures/gasPlanet_BaseColor.png',
+        normal: '/textures/gasPlanet_Normal.png',
+        roughness: '/textures/gasPlanet_Roughness.png',
+        ao: '/textures/gasPlanet_AmbientOcclusion.png',
+        height: '/textures/gasPlanet_Height.png',
+        metallic: '/textures/gasPlanet_Metallic.png',
+        opacity: '/textures/gasPlanet_Opacity.png',
+        specular: '/textures/gasPlanet_SpecularLevel.png'
+      }
     },
     {
       id: 'petradar',
@@ -62,7 +84,17 @@ export const defaultUniverseConfig: UniverseConfig = {
       planetSubtitle: 'Animal Rescue Network',
       planetData: '847K Pet Records',
       planetColor: '#9d4edd',
-      appRoute: '/pet-radar'
+      appRoute: '/pet-radar',
+      textureSet: {
+        baseColor: '/textures/desolate dirt planet_BaseColor.png',
+        normal: '/textures/desolate dirt planet_Normal.png',
+        roughness: '/textures/desolate dirt planet_Roughness.png',
+        ao: '/textures/desolate dirt planet_AmbientOcclusion.png',
+        height: '/textures/desolate dirt planet_Height.png',
+        metallic: '/textures/desolate dirt planet_Metallic.png',
+        opacity: '/textures/desolate dirt planet_Opacity.png',
+        specular: '/textures/desolate dirt planet_SpecularLevel.png'
+      }
     },
     {
       id: 'jetshome',
@@ -71,7 +103,17 @@ export const defaultUniverseConfig: UniverseConfig = {
       planetSubtitle: 'Sports Analytics Hub',
       planetData: '156K Game Stats',
       planetColor: '#06ffa5',
-      appRoute: '/jets-home'
+      appRoute: '/jets-home',
+      textureSet: {
+        baseColor: '/textures/jetsSkin_BaseColor.png',
+        normal: '/textures/jetsSkin_Normal.png',
+        roughness: '/textures/jetsSkin_Roughness.png',
+        ao: '/textures/jetsSkin_AmbientOcclusion.png',
+        height: '/textures/jetsSkin_Height.png',
+        metallic: '/textures/jetsSkin_Metallic.png',
+        opacity: '/textures/jetsSkin_Opacity.png',
+        specular: '/textures/jetsSkin_SpecularLevel.png'
+      }
     }
   ],
   scene: {
